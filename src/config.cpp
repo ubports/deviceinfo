@@ -44,9 +44,10 @@ Config::Config(Device *device)
     if (env) {
         if (exists(env)) {
             path = std::string(env);
-        } else {
-            std::cout << "Did not find provided config, using default" << std::endl;
-        }
+        } // else {
+          // We need a way to disable logging, since scripts cannot handle this if something goes wrong
+          // std::cout << "Did not find provided config, using default" << std::endl;
+          //}
     }
     
     if (exists(path)) {

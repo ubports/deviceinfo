@@ -1,0 +1,5 @@
+deviceinfo (0.1.0) xenial; urgency=medium
+
+  * initial release
+
+ -- Marius Gripsgard <marius@ubports.com>  Tue, 17 Sep 2019 23:09:12 +0200

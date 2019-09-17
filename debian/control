@@ -21,6 +21,7 @@ Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         libdeviceinfo0 (= ${binary:Version}),
 Description: Development headers to detect and configure devices 
  Development headers for libdeviceinfo, to detect and configure devices
 

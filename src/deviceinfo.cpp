@@ -20,6 +20,8 @@
 #include "device.h"
 
 #include <memory>
+#include <sstream>
+#include <string>
 
 DeviceInfo::DeviceInfo():
     m_device(std::make_shared<Device>())
@@ -60,12 +62,20 @@ bool DeviceInfo::contains(std::string prop)
     return m_device->contains(prop);
 }
 
-std::string DeviceInfo::supportedOrientations() { 
-    return get("SupportedOrientations", "Portrait,InvertedPortrait,Landscape,InvertedLandscape");
+std::vector<std::string> DeviceInfo::supportedOrientations() {
+    auto str = get("SupportedOrientations", "Portrait,InvertedPortrait,Landscape,InvertedLandscape");
+    std::vector<std::string> ret;
+    std::string tmp;
+    std::istringstream istr(str);
+    while (std::getline(istr, tmp, *","))
+    {
+        ret.push_back(tmp);
+    }
+    return ret;
 }
 
 std::string DeviceInfo::primaryOrientation() {
-    return get("PrimaryOrientation", "PrimaryOrienation");
+    return get("PrimaryOrientation", "Portrait");
 }
 
 std::string DeviceInfo::portraitOrientation() {
@@ -73,10 +83,14 @@ std::string DeviceInfo::portraitOrientation() {
 }
 
 std::string DeviceInfo::invertedPortraitOrientation() {
-    return get("LandscapeOrientation", "Landscape");
+    return get("InvertedPortraitOrientation", "InvertedPortrait");
 }
 
 std::string DeviceInfo::landscapeOrientation() {
+    return get("LandscapeOrientation", "Landscape");
+}
+
+std::string DeviceInfo::invertedLandscapeOrientation() {
     return get("InvertedLandscapeOrientation", "InvertedLandscape");
 }
 

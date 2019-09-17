@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 enum DeviceType {
     Phone,
@@ -49,11 +50,12 @@ public:
     bool contains(std::string prop);
 
     // Handy wrappers around get
-    std::string supportedOrientations();
+    std::vector<std::string> supportedOrientations();
     std::string primaryOrientation();
     std::string portraitOrientation();
     std::string invertedPortraitOrientation();
     std::string landscapeOrientation();
+    std::string invertedLandscapeOrientation();
 
     // Handy helpers
     static std::string deviceTypeToString(DeviceType type);

@@ -48,7 +48,8 @@ int get(std::string arg, std::shared_ptr<DeviceInfo> info) {
         return 0;
     }
     if (arg == "SupportedOrientations") {
-        print(info->supportedOrientations());
+        for (auto r : info->supportedOrientations())
+            print(r);
         return 0;
     }
     if (arg == "PrimaryOrientation") {

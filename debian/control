@@ -1,0 +1,33 @@
+Source: deviceinfo
+Section: admin
+Priority: optional
+Build-Depends: cmake (>= 2.8.10),
+               debhelper (>= 9),
+               libandroid-properties-dev
+Maintainer: Marius Gripsgard <marius@ubports.com>
+Standards-Version: 3.9.5
+Homepage: https://github.com/ubports/deviceinfo
+
+Package: libdeviceinfo0
+Section: libs
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Library to detect and configure devices 
+ Library to detect and configure devices 
+
+Package: libdeviceinfo-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Development headers to detect and configure devices 
+ Development headers for libdeviceinfo, to detect and configure devices
+
+Package: deviceinfo-tools
+Section: admin
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Tools to detect and configure devices 
+ Tools to detect and configure devices 

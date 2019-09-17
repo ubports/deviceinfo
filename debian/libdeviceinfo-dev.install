@@ -1,0 +1,3 @@
+usr/include/deviceinfo/deviceinfo.h
+usr/lib/*/pkgconfig/deviceinfo.pc
+usr/lib/*/libdeviceinfo.so

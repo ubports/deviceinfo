@@ -60,7 +60,7 @@
 Config::Config(Device *device)
     : m_device(device)
 {
-    auto detectedName = getEnv(ENV_DEVICE_NAME, device->detectName());
+    auto detectedName = getEnv(ENV_DEVICE_NAME, device->detectName().c_str());
 
     // Transform to lowercase
     std::transform(detectedName.begin(), detectedName.end(), detectedName.begin(), ::tolower);

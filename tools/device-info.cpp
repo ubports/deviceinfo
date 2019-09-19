@@ -68,6 +68,10 @@ int get(std::string arg, std::shared_ptr<DeviceInfo> info) {
         print(info->landscapeOrientation());
         return 0;
     }
+    if (arg == "InvertedLandscapeOrientation") {
+        print(info->invertedLandscapeOrientation());
+        return 0;
+    }
     if (arg == "GridUnit") {
         print(std::to_string(info->gridUnit()));
         return 0;
@@ -81,19 +85,44 @@ int get(std::string arg, std::shared_ptr<DeviceInfo> info) {
     return 1;
 }
 
+int printAboutMe(std::shared_ptr<DeviceInfo> info)
+{
+    std::cout << " -- About this device --" << std::endl;
+    std::cout << "Name: " << info->name() << std::endl;
+    std::cout << "PrettyName: " << info->prettyName() << std::endl;
+    std::cout << "DeviceType: " << DeviceInfo::deviceTypeToString(info->deviceType()) << std::endl;
+    std::cout << "DriverType: " << DeviceInfo::driverTypeToString(info->driverType()) << std::endl;
+
+    std::cout << "GridUnit: " << info->gridUnit() << std::endl;
+
+    std::cout << "SupportedOrientations: ";
+    for (auto r : info->supportedOrientations())
+        std::cout << r << " ";
+    std::cout << std::endl;
+
+    std::cout << "PrimaryOrientation: " << info->primaryOrientation() << std::endl;
+    std::cout << "PortraitOrientation: " << info->portraitOrientation() << std::endl;
+    std::cout << "InvertedPortraitOrientation: " << info->invertedPortraitOrientation() << std::endl;
+    std::cout << "LandscapeOrientation: " << info->landscapeOrientation() << std::endl;
+    std::cout << "InvertedLandscapeOrientation: " << info->invertedLandscapeOrientation() << std::endl;
+
+    return 0;
+}
+
 void help() {
     print("device-info usage:");
-    print("device-info get [prop]");
+    print(" - device-info            - list all about device");
+    print(" - device-info get [prop] - get spesific prop");
 }
 
 int main (int argc, char *argv[]) {
-    // We shoud not log anything as that might mess with scripts using this
-    std::shared_ptr<DeviceInfo> info = std::make_shared<DeviceInfo>(DeviceInfo::PrintMode::None);
-
-    if (argc == 3) {
+    if (argc == 1) {
+        return printAboutMe(std::make_shared<DeviceInfo>());
+    } else if (argc == 3) {
         std::string argv1 = argv[1];
         if (argv1 == "get") {
-            return get(std::string(argv[2]), info);
+            // We shoud not log anything as that might mess with scripts using this
+            return get(std::string(argv[2]), std::make_shared<DeviceInfo>(DeviceInfo::PrintMode::None));
         }
         // TODO: add set function
     }

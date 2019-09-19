@@ -37,7 +37,8 @@ public:
     };
 
     enum PrintMode {
-        None = -1,
+        None = -2,
+        Error = -1,
         Info = 0,
         Debug = 1,
         Verbose = 2

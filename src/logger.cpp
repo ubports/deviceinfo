@@ -63,6 +63,7 @@ void Logger::log(DeviceInfo::PrintMode mode, char const* fmt, ...)
 const char* Logger::modeToStr(DeviceInfo::PrintMode mode)
 {
     switch (mode) {
+        case DeviceInfo::PrintMode::Error: return "error";
         case DeviceInfo::PrintMode::Info: return "info";
         case DeviceInfo::PrintMode::Debug: return "debug";
         case DeviceInfo::PrintMode::Verbose: return "verbose";

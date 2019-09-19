@@ -35,10 +35,13 @@ private:
 
 class Log {
 public:
+    static void error(std::string &m) { Logger::log(DeviceInfo::PrintMode::Error, m); }
     static void info(std::string &m) { Logger::log(DeviceInfo::PrintMode::Info, m); }
     static void debug(std::string &m) { Logger::log(DeviceInfo::PrintMode::Debug, m); }
     static void verbose(std::string &m) { Logger::log(DeviceInfo::PrintMode::Verbose, m); }
 
+    template<typename... Args>
+    static void error(const char* fmt, Args&&... args) { Logger::log(DeviceInfo::PrintMode::Error, fmt, std::forward<Args>(args)...); }
     template<typename... Args>
     static void info(const char* fmt, Args&&... args) { Logger::log(DeviceInfo::PrintMode::Info, fmt, std::forward<Args>(args)...); }
     template<typename... Args>

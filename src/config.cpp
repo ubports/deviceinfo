@@ -16,6 +16,8 @@
  *
  */
 
+#define ENABLE_LEGACY 1
+
 #include "config.h"
 
 #include <string>
@@ -23,6 +25,10 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+
+#ifdef ENABLE_LEGACY
+#include <sstream>
+#endif
 
 #include "device.h"
 #include "deviceinfo.h"
@@ -41,6 +47,15 @@
 #define ENV_DEVICE_PATH "DEVICEINFO_DEVICE_CONFIG"
 #define ENV_ALIAS_PATH "DEVICEINFO_ALIAS_CONFIG"
 #define ENV_DEVICE_NAME "DEVICEINFO_DEVICE_NAME"
+
+#ifdef ENABLE_LEGACY
+#define LEGACY_GRID "GRID_UNIT_PX"
+#define LEGACY_DPR "QTWEBKIT_DPR"
+#define LEGACY_ORI "NATIVE_ORIENTATION"
+#define LEGACY_FORM "FORM_FACTOR"
+
+#define LEGACY_PATH "/etc/ubuntu-touch-session.d/"
+#endif
 
 Config::Config(Device *device)
     : m_device(device)
@@ -73,6 +88,11 @@ Config::Config(Device *device)
         Log::info("No device config found!");
     }
 
+#ifdef ENABLE_LEGACY
+    if (exists(nameToPath(detectedName, LEGACY_PATH)))
+        getLegacyEnv(nameToPath(detectedName, LEGACY_PATH));
+#endif
+
     auto defaultPath = getEnv(ENV_DEFAULT_PATH, nameToConfigPath(DEFAULT_CONFIG_PATH));
     if (exists(defaultPath)) {
         Log::debug("Using %s for default config", defaultPath.c_str());
@@ -100,6 +120,13 @@ bool Config::contains(std::string prop, bool defaults)
         }
         return m_defaultIni->contains(DEFAULT_SECTION, prop);
     } else {
+#ifdef ENABLE_LEGACY
+        if (!toLegacy(prop).empty() && !!m_legacyEnv.count(toLegacy(prop))) {
+            Log::debug("Legacy prop found!");
+            return true;
+        }
+#endif
+
         if (!m_deviceIni)
             return false;
         return m_deviceIni->contains(DEVICE_SECTION, prop); 
@@ -130,9 +157,18 @@ std::string Config::get(std::string prop, bool defaults, std::string defaultValu
         }
        return m_defaultIni->get(DEFAULT_SECTION, prop, defaultValue);
     } else {
-        if (!m_deviceIni)
-            return defaultValue;
-        return m_deviceIni->get(DEVICE_SECTION, prop, defaultValue);
+        std::string ret = defaultValue;
+
+#ifdef ENABLE_LEGACY
+        if (!toLegacy(prop).empty() && !!m_legacyEnv.count(toLegacy(prop))) {
+            Log::debug("Did not find new prop, but found legacy prop, using that");
+            ret = m_legacyEnv.at(toLegacy(prop));
+        }
+#endif
+        if (m_deviceIni && m_deviceIni->contains(DEVICE_SECTION, prop))
+            ret = m_deviceIni->get(DEVICE_SECTION, prop, defaultValue);
+
+        return ret;
     } 
 }
 
@@ -151,6 +187,14 @@ std::string Config::nameToConfigPath(std::string name)
     return path;
 }
 
+std::string Config::nameToPath(std::string name, std::string confpath)
+{
+    std::string path(confpath);
+    path.append(name);
+    path.append(".conf");
+    return path;
+}
+
 std::string Config::getEnv(const char *name, std::string dval)
 {
     const char* env = getenv(name);
@@ -161,3 +205,44 @@ std::string Config::getEnv(const char *name, std::string dval)
 
     return dval;
 }
+
+#ifdef ENABLE_LEGACY
+// Legacy
+std::string Config::toLegacy(std::string str)
+{
+    Log::verbose("toLegacy %s", str.c_str());
+    if (str == "GridUnit")
+        return LEGACY_GRID;
+    if (str == "WebkitDpr")
+        return LEGACY_DPR;
+    if (str == "PrimaryOrientation")
+        return LEGACY_ORI;
+    if (str == "DeviceType")
+        return LEGACY_FORM;
+    return std::string();
+}
+
+std::vector<std::string> Config::split(std::string strToSplit, char delimeter)
+{
+    std::stringstream ss(strToSplit);
+    std::string item;
+    std::vector<std::string> splittedStrings;
+    while (std::getline(ss, item, delimeter))
+    {
+       splittedStrings.push_back(item);
+    }
+    return splittedStrings;
+}
+
+void Config::getLegacyEnv(std::string dfile)
+{
+    std::ifstream file(dfile);
+    std::string str;
+    while (std::getline(file, str))
+    {
+        auto splitted = split(str, *"=");
+        m_legacyEnv[splitted[0]] = splitted[1];
+        Log::verbose("Found legacy env %s = %s", splitted[0].c_str(), splitted[1].c_str());
+    }
+}
+#endif

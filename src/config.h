@@ -20,6 +20,11 @@
 
 #include <memory>
 
+#ifdef ENABLE_LEGACY
+#include <map>
+#include <vector>
+#endif
+
 class Device;
 class IniParser;
 class Config {
@@ -33,7 +38,15 @@ public:
     static bool exists(std::string name);
 private:
     static std::string nameToConfigPath(std::string name);
+    static std::string nameToPath(std::string name, std::string confpath);
     static std::string getEnv(const char *name, std::string dval);
+
+#ifdef ENABLE_LEGACY
+    void getLegacyEnv(std::string dfile);
+    std::vector<std::string> split(std::string strToSplit, char delimeter);
+    std::map<std::string, std::string> m_legacyEnv;
+    std::string toLegacy(std::string str);
+#endif
 
     Device *m_device;
     std::shared_ptr<IniParser> m_deviceIni;

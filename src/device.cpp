@@ -19,6 +19,7 @@
 #include "device.h"
 
 #include "config.h"
+#include "logger.h"
 
 #include <memory>
 #include <string>
@@ -75,11 +76,18 @@ std::string Device::prettyName()
 int Device::gridUnit()
 {
     auto str = get("GridUnit", "8");
-    return stoi(str);
+    Log::verbose("Got gridunit str: %s", str.c_str());
+    try {
+        return stoi(str);
+    } catch(...) {
+        Log::error("GridUnit IS NOT A VALID NUMBER got %s", str.c_str());
+        return 8;
+    }
 }
 
 std::string Device::get(std::string prop, std::string defaultValue) {
     if (m_config->contains(prop, false)) {
+        Log::verbose("get found in device config");
         return m_config->get(prop, false);
     }
     return m_config->get(prop, true, defaultValue);

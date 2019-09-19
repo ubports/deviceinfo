@@ -18,14 +18,27 @@
 
 #include "deviceinfo.h"
 #include "device.h"
+#include "logger.h"
 
 #include <memory>
 #include <sstream>
 #include <string>
 
-DeviceInfo::DeviceInfo():
-    m_device(std::make_shared<Device>())
+#define ENV_DEBUG "DEVICEINFO_DEBUG"
+
+DeviceInfo::DeviceInfo(PrintMode printMode)
 {
+    Logger::setMode(printMode);
+
+    auto env = getenv(ENV_DEBUG);
+    if (env) {
+        try {
+            Logger::setMode((PrintMode) std::stoi(env));
+        } catch(...){}
+    }
+    
+    // Needs to happen after we set print mode
+    m_device = std::make_shared<Device>();
 }
 
 std::string DeviceInfo::name()
@@ -38,12 +51,12 @@ std::string DeviceInfo::prettyName()
     return m_device->prettyName();
 }
 
-DeviceType DeviceInfo::deviceType()
+DeviceInfo::DeviceType DeviceInfo::deviceType()
 {
     return m_device->deviceType();
 }
 
-DriverType DeviceInfo::driverType()
+DeviceInfo::DriverType DeviceInfo::driverType()
 {
     return m_device->driverType();
 }
@@ -94,38 +107,38 @@ std::string DeviceInfo::invertedLandscapeOrientation() {
     return get("InvertedLandscapeOrientation", "InvertedLandscape");
 }
 
-std::string DeviceInfo::deviceTypeToString(DeviceType type) {
+std::string DeviceInfo::deviceTypeToString(DeviceInfo::DeviceType type) {
     switch(type) {
-        case DeviceType::Phone:
+        case DeviceInfo::DeviceType::Phone:
             return "phone";
-        case DeviceType::Tablet:
+        case DeviceInfo::DeviceType::Tablet:
             return "tablet";
-        case DeviceType::Desktop:
+        case DeviceInfo::DeviceType::Desktop:
         default:
             return "desktop";
     }
 }
 
-DeviceType DeviceInfo::deviceTypeFromString(std::string str) {
+DeviceInfo::DeviceType DeviceInfo::deviceTypeFromString(std::string str) {
     if (str == "phone") 
-        return DeviceType::Phone;
+        return DeviceInfo::DeviceType::Phone;
     if (str == "tablet") 
-        return DeviceType::Tablet;
-    return DeviceType::Desktop;
+        return DeviceInfo::DeviceType::Tablet;
+    return DeviceInfo::DeviceType::Desktop;
 }
 
-std::string DeviceInfo::driverTypeToString(DriverType type) {
+std::string DeviceInfo::driverTypeToString(DeviceInfo::DriverType type) {
     switch(type) {
-        case DriverType::Halium:
+        case DeviceInfo::DriverType::Halium:
             return "halium";
-        case DriverType::Linux:
+        case DeviceInfo::DriverType::Linux:
         default:
             return "linux";
     }
 }
 
-DriverType DeviceInfo::driverTypeFromString(std::string str) {
+DeviceInfo::DriverType DeviceInfo::driverTypeFromString(std::string str) {
     if (str == "halium") 
-        return DriverType::Halium;
-    return DriverType::Linux;
+        return DeviceInfo::DriverType::Halium;
+    return DeviceInfo::DriverType::Linux;
 }

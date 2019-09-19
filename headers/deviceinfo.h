@@ -21,22 +21,29 @@
 #include <memory>
 #include <vector>
 
-enum DeviceType {
-    Phone,
-    Tablet,
-    Desktop,
-    Unknown = -1
-};
-
-enum DriverType {
-    Linux,
-    Halium
-};
-
 class Device;
 class DeviceInfo {
 public:
-    DeviceInfo();
+    enum DeviceType {
+        Phone,
+        Tablet,
+        Desktop,
+        Unknown = -1
+    };
+
+    enum DriverType {
+        Linux,
+        Halium
+    };
+
+    enum PrintMode {
+        None = -1,
+        Info = 0,
+        Debug = 1,
+        Verbose = 2
+    };
+
+    DeviceInfo(PrintMode printMode = PrintMode::Info);
 
     // Props with auto detections
     std::string name();

@@ -3,6 +3,7 @@ add_library(${TARGET} SHARED
     config.cpp
     device.cpp
     deviceinfo.cpp
+    logger.cpp
 )
 
 if(ANDROIDPROPS_FOUND)

@@ -68,6 +68,10 @@ int get(std::string arg, std::shared_ptr<DeviceInfo> info) {
         print(info->landscapeOrientation());
         return 0;
     }
+    if (arg == "GridUnit") {
+        print(std::to_string(info->gridUnit()));
+        return 0;
+    }
     if (info->contains(arg)) {
         print(info->get(arg, ""));
         return 0;
@@ -83,8 +87,8 @@ void help() {
 }
 
 int main (int argc, char *argv[]) {
-
-    std::shared_ptr<DeviceInfo> info = std::make_shared<DeviceInfo>();
+    // We shoud not log anything as that might mess with scripts using this
+    std::shared_ptr<DeviceInfo> info = std::make_shared<DeviceInfo>(DeviceInfo::PrintMode::None);
 
     if (argc == 3) {
         std::string argv1 = argv[1];

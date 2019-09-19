@@ -27,8 +27,8 @@ public:
 
     std::string name();
     std::string prettyName();
-    DeviceType deviceType();
-    DriverType driverType();
+    DeviceInfo::DeviceType deviceType();
+    DeviceInfo::DriverType driverType();
     int gridUnit();
 
     // get props that does not have auto detection
@@ -36,13 +36,14 @@ public:
     bool contains(std::string prop);
 
     // Detect logic
-    DeviceType detectType(bool returnUknown);
+    DeviceInfo::DeviceType detectType(bool returnUknown);
     std::string detectName();
 
 private:
     std::string getHaliumProp(const char* prop, const char* default_value);
     std::string getHaliumProp(const char* prop);
     bool hasHaliumProp(const char* prop);
+    std::string readFile(std::string file);
 
     bool m_isHalium;
     std::shared_ptr<Config> m_config;

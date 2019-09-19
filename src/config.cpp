@@ -22,36 +22,63 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "device.h"
 #include "deviceinfo.h"
 #include "iniparser.h"
+#include "logger.h"
 
 #define CONFIG_PATH "/etc/device-info/"
-#define DEFAULT_CONFIG_PATH "/etc/device-info/default.conf"
+#define DEFAULT_CONFIG_PATH "default"
+#define ALIAS_CONFIG_PATH "alias"
+#define ALIAS_SECTION "alias"
 #define DEFAULT_SECTION "default"
 #define DEVICE_SECTION "device"
+
+#define ENV_PATH "DEVICEINFO_CONFIG_PATH"
+#define ENV_DEFAULT_PATH "DEVICEINFO_DEFAULT_CONFIG"
+#define ENV_DEVICE_PATH "DEVICEINFO_DEVICE_CONFIG"
+#define ENV_ALIAS_PATH "DEVICEINFO_ALIAS_CONFIG"
+#define ENV_DEVICE_NAME "DEVICEINFO_DEVICE_NAME"
 
 Config::Config(Device *device)
     : m_device(device)
 {
-    if (exists(nameToConfigPath(device->detectName()))) {
-        m_deviceIni = std::make_shared<IniParser>(nameToConfigPath(device->name()));
+    auto detectedName = getEnv(ENV_DEVICE_NAME, device->detectName());
+
+    // Transform to lowercase
+    std::transform(detectedName.begin(), detectedName.end(), detectedName.begin(), ::tolower);
+
+    Log::debug("Detected name: %s", detectedName.c_str());
+
+    auto aliasPath = getEnv(ENV_ALIAS_PATH, nameToConfigPath(ALIAS_CONFIG_PATH));
+    if (exists(aliasPath)) {
+        IniParser aliasIni(aliasPath);
+        if (aliasIni.contains(ALIAS_SECTION, detectedName)) {
+            auto aliasName = aliasIni.get(ALIAS_SECTION, detectedName, detectedName);
+            Log::verbose("Found alias %s", aliasName.c_str());
+            if (exists(nameToConfigPath(aliasName))) {
+                Log::debug("Using %s as alias for %s", aliasName.c_str(), detectedName.c_str());
+                detectedName = aliasName;
+            }
+        }
     }
 
-    std::string path = DEFAULT_CONFIG_PATH;
-    const char* env = getenv("DEVICE_INFO_CONFIG");
-    if (env) {
-        if (exists(env)) {
-            path = std::string(env);
-        } // else {
-          // We need a way to disable logging, since scripts cannot handle this if something goes wrong
-          // std::cout << "Did not find provided config, using default" << std::endl;
-          //}
+    auto devicePath = getEnv(ENV_DEVICE_PATH, nameToConfigPath(detectedName));
+    if (exists(devicePath)) {
+        Log::debug("Using %s for device config", devicePath.c_str());
+        m_deviceIni = std::make_shared<IniParser>(devicePath);
+    } else {
+        Log::info("No device config found!");
     }
-    
-    if (exists(path)) {
-        m_defaultIni = std::make_shared<IniParser>(path);
+
+    auto defaultPath = getEnv(ENV_DEFAULT_PATH, nameToConfigPath(DEFAULT_CONFIG_PATH));
+    if (exists(defaultPath)) {
+        Log::debug("Using %s for default config", defaultPath.c_str());
+        m_defaultIni = std::make_shared<IniParser>(defaultPath);
+    } else {
+        Log::info("No default config found!");
     }
 }
 
@@ -111,13 +138,26 @@ std::string Config::get(std::string prop, bool defaults, std::string defaultValu
 
 bool Config::exists(std::string name)
 {
+    Log::verbose("Seeing if %s exists", name.c_str());
     std::ifstream infile(name);
     return infile.good();   
 }
 
 std::string Config::nameToConfigPath(std::string name)
 {   
-    std::string path(CONFIG_PATH);
+    std::string path(getEnv(ENV_PATH, CONFIG_PATH));
     path.append(name);
+    path.append(".conf");
     return path;
+}
+
+std::string Config::getEnv(const char *name, std::string dval)
+{
+    const char* env = getenv(name);
+    if (env) {
+         Log::verbose("Using provided env %s", env);
+        return std::string(env);
+    }
+
+    return dval;
 }

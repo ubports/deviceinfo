@@ -33,6 +33,7 @@ public:
     static bool exists(std::string name);
 private:
     static std::string nameToConfigPath(std::string name);
+    static std::string getEnv(const char *name, std::string dval);
 
     Device *m_device;
     std::shared_ptr<IniParser> m_deviceIni;

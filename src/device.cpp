@@ -22,22 +22,26 @@
 
 #include <memory>
 #include <string>
+#include <iterator>
+#include <fstream>
 #include <string.h>
 
 #if HAVE_PROPS
 #include <hybris/properties/properties.h>
 #endif
 
+// For hybris
 #define DEVICE_PROP_KEY "ro.product.device"
 #define MODEL_PROP_KEY "ro.product.model"
 #define CHARA_PROP_KEY "ro.build.characteristics"
 
-Device::Device()
-{
-    // Figure out if we use halium/android or not
-    m_isHalium = hasHaliumProp(DEVICE_PROP_KEY);
+// For linux
+#define LINUX_MODEL "/proc/device-tree/model"
 
-    m_config = std::make_shared<Config>(this);
+Device::Device() :
+    m_isHalium(hasHaliumProp(DEVICE_PROP_KEY)),
+    m_config(std::make_shared<Config>(this))
+{
 }
 
 std::string Device::name()
@@ -89,7 +93,7 @@ bool Device::contains(std::string prop) {
 }
 
 
-DeviceType Device::deviceType()
+DeviceInfo::DeviceType Device::deviceType()
 {
     if (m_config->contains("DeviceType", false)) {
         auto typeStr = m_config->get("DeviceType", false);
@@ -97,7 +101,7 @@ DeviceType Device::deviceType()
     }
 
     auto detected = detectType(true);
-    if (detected != DeviceType::Unknown)
+    if (detected != DeviceInfo::DeviceType::Unknown)
         return detected;
 
     return DeviceInfo::deviceTypeFromString(m_config->get("DeviceType", true, "desktop"));
@@ -108,29 +112,34 @@ std::string Device::detectName() {
         return getHaliumProp(DEVICE_PROP_KEY);
     }
 
+    // If it's not halium or does not have device prop, try dtb
+    auto model = readFile(LINUX_MODEL);
+    if (!model.empty())
+        return model;
+
     return "unknown";
 }
 
-DeviceType Device::detectType(bool returnUknown) {
+DeviceInfo::DeviceType Device::detectType(bool returnUknown) {
     if (m_isHalium) {
         auto chara = getHaliumProp(CHARA_PROP_KEY);
         if (chara.find("tablet") != std::string::npos)
-            return DeviceType::Tablet;
+            return DeviceInfo::DeviceType::Tablet;
 
         // As this is a halium device, the best guess will be phone
-        return DeviceType::Phone;
+        return DeviceInfo::DeviceType::Phone;
     }
 
     // At this point we guess it's a desktop
-    return returnUknown ? DeviceType::Unknown : DeviceType::Desktop;
+    return returnUknown ? DeviceInfo::DeviceType::Unknown : DeviceInfo::DeviceType::Desktop;
 }
 
-DriverType Device::driverType()
+DeviceInfo::DriverType Device::driverType()
 {
     if (m_isHalium)
-        return DriverType::Halium;
+        return DeviceInfo::DriverType::Halium;
 
-    return DriverType::Linux;
+    return DeviceInfo::DriverType::Linux;
 }
 
 std::string Device::getHaliumProp(const char* prop)
@@ -158,5 +167,15 @@ bool Device::hasHaliumProp(const char* key)
     property_get(key, value, default_value);
     ret = strcmp(value, default_value) != 0;
 #endif
+    return ret;
+}
+
+std::string Device::readFile(std::string file)
+{
+    std::ifstream model(file);
+    std::string ret;
+    if (model.good())
+        ret = std::string(std::istreambuf_iterator<char>{model},
+                          std::istreambuf_iterator<char>());
     return ret;
 }

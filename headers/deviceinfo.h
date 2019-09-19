@@ -46,6 +46,9 @@ public:
 
     DeviceInfo(PrintMode printMode = PrintMode::Info);
 
+    // Internal logging
+    void setPrintMode(PrintMode printMode);
+
     // Props with auto detections
     std::string name();
     std::string prettyName();

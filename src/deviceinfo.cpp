@@ -28,6 +28,14 @@
 
 DeviceInfo::DeviceInfo(PrintMode printMode)
 {
+    setPrintMode(printMode);
+
+    // Needs to happen after we set print mode
+    m_device = std::make_shared<Device>();
+}
+
+void DeviceInfo::setPrintMode(PrintMode printMode)
+{
     Logger::setMode(printMode);
 
     auto env = getenv(ENV_DEBUG);
@@ -36,9 +44,6 @@ DeviceInfo::DeviceInfo(PrintMode printMode)
             Logger::setMode((PrintMode) std::stoi(env));
         } catch(...){}
     }
-    
-    // Needs to happen after we set print mode
-    m_device = std::make_shared<Device>();
 }
 
 std::string DeviceInfo::name()

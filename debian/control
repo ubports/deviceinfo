@@ -3,6 +3,7 @@ Section: admin
 Priority: optional
 Build-Depends: cmake (>= 2.8.10),
                debhelper (>= 9),
+               pkg-config,
                libandroid-properties-dev
 Maintainer: Marius Gripsgard <marius@ubports.com>
 Standards-Version: 3.9.5

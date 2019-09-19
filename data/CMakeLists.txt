@@ -1,6 +1,7 @@
 set(CONFIG_FILES
     # Default
     default.conf
+    alias.conf
 
     # Device spesific
     pinephone.conf

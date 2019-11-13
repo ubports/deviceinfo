@@ -19,4 +19,4 @@ add_subdirectory(headers)
 add_subdirectory(src)
 add_subdirectory(tools)
 
-install(DIRECTORY configs DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/device-info)
+install(DIRECTORY configs/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/device-info)

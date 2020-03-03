@@ -84,7 +84,7 @@ Any key can be added without needing to modify deviceinfo to use, the downside i
  - DEVICEINFO_DEVICE_NAME overrides device detected name
  - DEVICEINFO_DEBUG overrides debug level (-1 = None, 0 = Info, 1 = Debug, 2 = Verbose)
 
-## Bulding
+## Building
 
 ```
 mkdir build

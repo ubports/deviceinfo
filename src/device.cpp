@@ -34,6 +34,8 @@
 // For hybris
 #define DEVICE_PROP_KEY "ro.product.device"
 #define MODEL_PROP_KEY "ro.product.model"
+#define VENDOR_DEVICE_PROP_KEY "ro.product.vendor.device"
+#define VENDOR_MODEL_PROP_KEY "ro.product.vendor.model"
 #define CHARA_PROP_KEY "ro.build.characteristics"
 
 // For linux
@@ -65,8 +67,11 @@ std::string Device::prettyName()
         return m_config->get("PrettyName", false);
     }
 
-    if (m_isHalium && hasHaliumProp(MODEL_PROP_KEY)) {
-        return getHaliumProp(MODEL_PROP_KEY);
+    if (m_isHalium) {
+        if (hasHaliumProp(VENDOR_MODEL_PROP_KEY))
+            return getHaliumProp(VENDOR_MODEL_PROP_KEY);
+        else if (hasHaliumProp(MODEL_PROP_KEY))
+            return getHaliumProp(MODEL_PROP_KEY);
     }
 
     // If all else fails
@@ -116,8 +121,11 @@ DeviceInfo::DeviceType Device::deviceType()
 }
 
 std::string Device::detectName() {
-    if (m_isHalium && hasHaliumProp(DEVICE_PROP_KEY)) {
-        return getHaliumProp(DEVICE_PROP_KEY);
+    if (m_isHalium) {
+        if (hasHaliumProp(VENDOR_DEVICE_PROP_KEY))
+            return getHaliumProp(VENDOR_DEVICE_PROP_KEY);
+        else if (hasHaliumProp(DEVICE_PROP_KEY))
+            return getHaliumProp(DEVICE_PROP_KEY);
     }
 
     // If it's not halium or does not have device prop, try dtb

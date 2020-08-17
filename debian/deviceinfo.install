@@ -1,0 +1,2 @@
+lib/systemd/system/deviceinfo-refresh.service
+etc/init/deviceinfo-refresh.conf

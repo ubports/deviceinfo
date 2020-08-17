@@ -9,6 +9,8 @@ set(VERSION_PATCH 0)
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
+option(ENABLE_UPSTART "Enable upstart" off)
+
 pkg_search_module(ANDROIDPROPS libandroid-properties)
 
 set(TARGET deviceinfo)
@@ -18,5 +20,6 @@ include_directories(headers)
 add_subdirectory(headers)
 add_subdirectory(src)
 add_subdirectory(tools)
+add_subdirectory(data)
 
 install(DIRECTORY configs/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/device-info)

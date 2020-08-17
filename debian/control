@@ -3,8 +3,10 @@ Section: admin
 Priority: optional
 Build-Depends: cmake (>= 2.8.10),
                debhelper (>= 9),
+               dh-systemd,
                pkg-config,
-               libandroid-properties-dev
+               libandroid-properties-dev,
+               systemd,
 Maintainer: Marius Gripsgard <marius@ubports.com>
 Standards-Version: 3.9.5
 Homepage: https://github.com/ubports/deviceinfo
@@ -33,3 +35,12 @@ Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Tools to detect and configure devices 
  Tools to detect and configure devices 
+
+Package: deviceinfo
+Section: admin
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         deviceinfo-tools
+Description: Configures and provide infomation about devices
+ Configures and provide infomation about devices

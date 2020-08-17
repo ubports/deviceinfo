@@ -26,6 +26,30 @@ void print(std::string str) {
     std::cout << str << std::endl;
 }
 
+int refresh(std::shared_ptr<DeviceInfo> info) {
+    // Setup hostname chassis
+    std::string cmd = "hostnamectl set-chassis ";
+    switch (info->deviceType()) {
+        case DeviceInfo::DeviceType::Phone:
+            cmd += "handset";
+            break;
+        case DeviceInfo::DeviceType::Tablet:
+            cmd += "tablet";
+            break;
+        default:
+            cmd += "desktop";
+            break;
+    }
+
+    if (system(cmd.c_str()) != 0) {
+        print("Failed to set hostname chassis");
+        return 1;
+    }
+
+    print("Refresh of device info done");
+    return 0;
+}
+
 int get(std::string arg, std::shared_ptr<DeviceInfo> info) {
     if (arg == "Name") {
         print(info->name());
@@ -113,11 +137,16 @@ void help() {
     print("device-info usage:");
     print(" - device-info            - list all about device");
     print(" - device-info get [prop] - get spesific prop");
+    print(" - device-info refresh    - refresh deviceinfo cache and set system properies");
 }
 
 int main (int argc, char *argv[]) {
     if (argc == 1) {
         return printAboutMe(std::make_shared<DeviceInfo>());
+    } else if (argc == 2) {
+        std::string argv1 = argv[1];
+        if (argv1 == "refresh")
+            return refresh(std::make_shared<DeviceInfo>(DeviceInfo::PrintMode::Info));
     } else if (argc == 3) {
         std::string argv1 = argv[1];
         if (argv1 == "get") {

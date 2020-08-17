@@ -2,9 +2,11 @@ Source: deviceinfo
 Section: admin
 Priority: optional
 Build-Depends: cmake (>= 2.8.10),
+               cmake-extras,
                debhelper (>= 9),
                pkg-config,
-               libandroid-properties-dev
+               libandroid-properties-dev,
+               googletest | google-mock,
 Maintainer: Marius Gripsgard <marius@ubports.com>
 Standards-Version: 3.9.5
 Homepage: https://github.com/ubports/deviceinfo

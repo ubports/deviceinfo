@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh device info
+after=dbus.service
+
+[Service]
+ExecStart=device-info refresh
+
+[Install]
+WantedBy=multi-user.target

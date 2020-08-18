@@ -1,4 +1,7 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --parallel --buildsystem cmake --fail-missing
+	dh $@ --parallel --buildsystem cmake --fail-missing --with systemd
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DENABLE_UPSTART=yes

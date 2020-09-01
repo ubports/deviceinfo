@@ -16,7 +16,8 @@
  *
  */
 
-#define ENABLE_LEGACY 1
+// ENABLE_LEGACY set by cmake
+// CONFIG_PATH set by cmake
 
 #include "config.h"
 
@@ -35,7 +36,6 @@
 #include "iniparser.h"
 #include "logger.h"
 
-#define CONFIG_PATH "/etc/device-info/"
 #define DEFAULT_CONFIG_PATH "default"
 #define ALIAS_CONFIG_PATH "alias"
 #define ALIAS_SECTION "alias"
@@ -180,10 +180,13 @@ bool Config::exists(std::string name)
 }
 
 std::string Config::nameToConfigPath(std::string name)
-{   
+{
     std::string path(getEnv(ENV_PATH, CONFIG_PATH));
+    if (path.back() != '/')
+        path.append("/");
     path.append(name);
     path.append(".conf");
+
     return path;
 }
 

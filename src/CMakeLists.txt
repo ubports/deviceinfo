@@ -10,7 +10,8 @@ if(ANDROIDPROPS_FOUND)
     add_definitions(-DHAVE_PROPS)
 endif()
 
-add_definitions(-DENABLE_LEGACY)
+add_definitions(-DENABLE_LEGACY=1)
+add_definitions(-DCONFIG_PATH="${CONFIG_PATH}")
 
 target_link_libraries(${TARGET}
     ${ANDROIDPROPS_LDFLAGS}

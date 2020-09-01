@@ -12,6 +12,9 @@ include(GNUInstallDirs)
 option(DISABLE_TESTS "Disable tests" off)
 
 pkg_search_module(ANDROIDPROPS libandroid-properties)
+if(NOT ANDROIDPROPS_FOUND)
+    message(WARNING "Did not find android properties, bulding without!")
+endif()
 
 set(TARGET deviceinfo)
 

@@ -1,14 +1,22 @@
+if(ANDROIDPROPS_FOUND)
+    add_definitions(-DHAVE_PROPS)
+
+    set(HALIUM_SRC
+        platform/halium.cpp
+    )
+endif()
+
 add_library(${TARGET} SHARED
     iniparser.cpp
     config.cpp
     device.cpp
     deviceinfo.cpp
     logger.cpp
-)
 
-if(ANDROIDPROPS_FOUND)
-    add_definitions(-DHAVE_PROPS)
-endif()
+    platform/platform.cpp
+    platform/linux.cpp
+    ${HALIUM_SRC}
+)
 
 add_definitions(-DENABLE_LEGACY=1)
 add_definitions(-DCONFIG_PATH="${CONFIG_PATH}")

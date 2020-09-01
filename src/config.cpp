@@ -35,6 +35,7 @@
 #include "deviceinfo.h"
 #include "iniparser.h"
 #include "logger.h"
+#include "platform/platform.h"
 
 #define DEFAULT_CONFIG_PATH "default"
 #define ALIAS_CONFIG_PATH "alias"
@@ -57,10 +58,10 @@
 #define LEGACY_PATH "/etc/ubuntu-touch-session.d/"
 #endif
 
-Config::Config(Device *device)
-    : m_device(device)
+Config::Config(std::shared_ptr<Platform> platform)
+    : m_platform(platform)
 {
-    auto detectedName = getEnv(ENV_DEVICE_NAME, device->detectName().c_str());
+    auto detectedName = getEnv(ENV_DEVICE_NAME, platform->name().c_str());
 
     // Transform to lowercase
     std::transform(detectedName.begin(), detectedName.end(), detectedName.begin(), ::tolower);
@@ -108,12 +109,12 @@ bool Config::contains(std::string prop, bool defaults)
         if (!m_defaultIni)
             return false;
 
-        auto detected = DeviceInfo::deviceTypeToString(m_device->detectType(false));
+        auto detected = DeviceInfo::deviceTypeToString(m_platform->deviceType());
         if (m_defaultIni->sections().count(detected)) {
             if (m_defaultIni->contains(detected, prop)) 
                 return true;
         }
-        auto driverType = DeviceInfo::driverTypeToString(m_device->driverType());
+        auto driverType = DeviceInfo::driverTypeToString(m_platform->driverType());
         if (m_defaultIni->sections().count(driverType)) {
             if (m_defaultIni->contains(driverType, prop)) 
                 return true;
@@ -145,12 +146,12 @@ std::string Config::get(std::string prop, bool defaults, std::string defaultValu
         if (!m_defaultIni)
             return defaultValue;
 
-        auto detected = DeviceInfo::deviceTypeToString(m_device->detectType(false));
+        auto detected = DeviceInfo::deviceTypeToString(m_platform->deviceType());
         if (m_defaultIni->sections().count(detected)) {
             if (m_defaultIni->contains(detected, prop)) 
                 return m_defaultIni->get(detected, prop, defaultValue);
         }
-        auto driverType = DeviceInfo::driverTypeToString(m_device->driverType());
+        auto driverType = DeviceInfo::driverTypeToString(m_platform->driverType());
         if (m_defaultIni->sections().count(driverType)) {
             if (m_defaultIni->contains(driverType, prop)) 
                 return m_defaultIni->get(driverType, prop, defaultValue);

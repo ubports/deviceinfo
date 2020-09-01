@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 UBports foundation.
+ * Copyright (C) 2020 UBports foundation.
  * Author(s): Marius Gripsgard <marius@ubports.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -18,24 +18,30 @@
 
 #pragma once
 
-#include "deviceinfo.h"
+#include <memory>
 
-class Config;
-class Platform;
-class Device {
+#include "platform.h"
+
+namespace platform {
+class Halium : public Platform {
 public:
-    Device();
+    Halium() = default;
 
-    std::string name();
-    std::string prettyName();
-    DeviceInfo::DeviceType deviceType();
-    DeviceInfo::DriverType driverType();
-    int gridUnit();
+    std::string name() override;
+    std::string prettyName() override;
+    DeviceInfo::DeviceType deviceType() override;
+    DeviceInfo::DriverType driverType() override;
 
-    // get props that does not have auto detection
-    std::string get(std::string prop, std::string defaultValue);
-    bool contains(std::string prop);
+    bool hasValidName() override;
+    bool hasValidPrettyName() override;
+    bool hasValidDeviceType() override;
+
+    static bool usable();
 private:
-    std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<Config> m_config;
+    std::string getHaliumProp(const char* prop);
+    std::string getHaliumProp(const char* prop, const char* default_value);\
+
+    // Static as this is used by usable()
+    static bool hasHaliumProp(const char* key);
 };
+}

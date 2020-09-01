@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 UBports foundation.
+ * Copyright (C) 2020 UBports foundation.
  * Author(s): Marius Gripsgard <marius@ubports.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -18,24 +18,24 @@
 
 #pragma once
 
-#include "deviceinfo.h"
+#include "platform.h"
 
-class Config;
-class Platform;
-class Device {
+#include <memory>
+
+namespace platform {
+class Linux : public Platform {
 public:
-    Device();
+    Linux() = default;
 
-    std::string name();
-    std::string prettyName();
-    DeviceInfo::DeviceType deviceType();
-    DeviceInfo::DriverType driverType();
-    int gridUnit();
+    std::string name() override;
+    std::string prettyName() override;
+    DeviceInfo::DeviceType deviceType() override;
+    DeviceInfo::DriverType driverType() override;
 
-    // get props that does not have auto detection
-    std::string get(std::string prop, std::string defaultValue);
-    bool contains(std::string prop);
+    bool hasValidName() override;
+
+    static bool usable() { return true; };
 private:
-    std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<Config> m_config;
+    std::string readFile(std::string file);
 };
+}

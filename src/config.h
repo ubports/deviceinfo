@@ -25,11 +25,11 @@
 #include <vector>
 #endif
 
-class Device;
+class Platform;
 class IniParser;
 class Config {
 public:
-    Config(Device *device);
+    Config(std::shared_ptr<Platform> platform);
 
     std::string get(std::string prop, bool defaults, std::string defaultValue);
     std::string get(std::string prop, bool defaults);
@@ -48,7 +48,7 @@ private:
     std::string toLegacy(std::string str);
 #endif
 
-    Device *m_device;
+    std::shared_ptr<Platform> m_platform;
     std::shared_ptr<IniParser> m_deviceIni;
     std::shared_ptr<IniParser> m_defaultIni;
 };

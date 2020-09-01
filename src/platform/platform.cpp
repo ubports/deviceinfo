@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 UBports foundation.
+ * Copyright (C) 2020 UBports foundation.
  * Author(s): Marius Gripsgard <marius@ubports.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -16,26 +16,15 @@
  *
  */
 
-#pragma once
+#include "platform.h"
+#include "linux.h"
+#include "halium.h"
 
-#include "deviceinfo.h"
+std::shared_ptr<Platform> Platform::create()
+{
+    if (platform::Halium::usable())
+        return std::make_shared<platform::Halium>();
 
-class Config;
-class Platform;
-class Device {
-public:
-    Device();
-
-    std::string name();
-    std::string prettyName();
-    DeviceInfo::DeviceType deviceType();
-    DeviceInfo::DriverType driverType();
-    int gridUnit();
-
-    // get props that does not have auto detection
-    std::string get(std::string prop, std::string defaultValue);
-    bool contains(std::string prop);
-private:
-    std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<Config> m_config;
-};
+    // Linux is our fallback
+    return std::make_shared<platform::Linux>();
+}

@@ -17,7 +17,7 @@ set(TARGET deviceinfo)
 
 include_directories(headers)
 
-set(CONFIG_PATH ${CMAKE_INSTALL_FULL_SYSCONFDIR}/deviceinfo)
+set(CONFIG_PATH ${CMAKE_INSTALL_FULL_SYSCONFDIR}/deviceinfo CACHE STRING "")
 install(DIRECTORY configs/ DESTINATION ${CONFIG_PATH})
 
 add_subdirectory(headers)

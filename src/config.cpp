@@ -18,6 +18,7 @@
 
 // ENABLE_LEGACY set by cmake
 // CONFIG_PATH set by cmake
+// DEVICES_PATH set by cmake
 
 #include "config.h"
 
@@ -26,192 +27,192 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-
-#ifdef ENABLE_LEGACY
-#include <sstream>
-#endif
+#include <vector>
+#include <map>
+#include <dirent.h>
+#include <string.h>
+#include <yaml-cpp/yaml.h>
 
 #include "device.h"
 #include "deviceinfo.h"
-#include "iniparser.h"
 #include "logger.h"
+#include "utils.h"
 #include "platform/platform.h"
 
-#define DEFAULT_CONFIG_PATH "default"
-#define ALIAS_CONFIG_PATH "alias"
-#define ALIAS_SECTION "alias"
-#define DEFAULT_SECTION "default"
-#define DEVICE_SECTION "device"
 
-#define ENV_PATH "DEVICEINFO_CONFIG_PATH"
-#define ENV_DEFAULT_PATH "DEVICEINFO_DEFAULT_CONFIG"
-#define ENV_DEVICE_PATH "DEVICEINFO_DEVICE_CONFIG"
-#define ENV_ALIAS_PATH "DEVICEINFO_ALIAS_CONFIG"
-#define ENV_DEVICE_NAME "DEVICEINFO_DEVICE_NAME"
+namespace {
 
-#ifdef ENABLE_LEGACY
-#define LEGACY_GRID "GRID_UNIT_PX"
-#define LEGACY_DPR "QTWEBKIT_DPR"
-#define LEGACY_ORI "NATIVE_ORIENTATION"
-#define LEGACY_FORM "FORM_FACTOR"
+std::string getConfigPath() {
+    return utils::env::get(ENV_CONFIG_PATH, CONFIG_PATH);
+}
 
-#define LEGACY_PATH "/etc/ubuntu-touch-session.d/"
-#endif
+std::string getDevicePath() {
+    return utils::env::get(ENV_DEVICE_PATH, DEVICES_PATH);
+}
+
+std::string getDefaultFile() {
+    return utils::path::join(getConfigPath(), DEFAULT_CONFIG_FILE);
+}
+
+};
 
 Config::Config(std::shared_ptr<Platform> platform)
     : m_platform(platform)
 {
-    auto detectedName = getEnv(ENV_DEVICE_NAME, platform->name().c_str());
+    auto detectedName = utils::env::get(ENV_DEVICE_NAME, platform->name().c_str());
 
     // Transform to lowercase
     std::transform(detectedName.begin(), detectedName.end(), detectedName.begin(), ::tolower);
 
     Log::debug("Detected name: %s", detectedName.c_str());
 
-    auto aliasPath = getEnv(ENV_ALIAS_PATH, nameToConfigPath(ALIAS_CONFIG_PATH));
-    if (exists(aliasPath)) {
-        IniParser aliasIni(aliasPath);
-        if (aliasIni.contains(ALIAS_SECTION, detectedName)) {
-            auto aliasName = aliasIni.get(ALIAS_SECTION, detectedName, detectedName);
-            Log::verbose("Found alias %s", aliasName.c_str());
-            if (exists(nameToConfigPath(aliasName))) {
-                Log::debug("Using %s as alias for %s", aliasName.c_str(), detectedName.c_str());
-                detectedName = aliasName;
+    // Lets try to find the devices config
+    auto devicePath = getDevicePath();
+    if (utils::path::exists(devicePath)) {
+        DIR *dir;
+        struct dirent *diread;
+        std::vector<char *> files;
+
+        if ((dir = opendir(devicePath.c_str())) != nullptr) {
+            while ((diread = readdir(dir)) != nullptr && m_configNode.IsNull()) {
+                if (!strcmp(diread->d_name, ".") || !strcmp(diread->d_name, ".."))
+                    continue;
+
+                auto file = utils::path::join(devicePath, std::string(diread->d_name));
+                Log::verbose("Trying to load yaml file: %s", file.c_str());
+
+                auto yaml = YAML::LoadFile(file);
+                for (auto a : yaml) {
+                    if (a.first.IsDefined() && a.first.as<std::string>() == detectedName) {
+                        m_configNode = std::move(a.second);
+                        if (!m_configNode["Name"].IsDefined())
+                           m_configNode["Name"] = detectedName;
+                    } else if (a.second["Names"].IsDefined()) {
+                        auto names = a.second["Names"].as<std::vector<std::string>>();
+                        if (std::find(std::begin(names), std::end(names), detectedName) != std::end(names)) {
+                            m_configNode = std::move(a.second);
+                            if (!m_configNode["Name"].IsDefined())
+                                m_configNode["Name"] = detectedName;
+                        }
+                    }
+                }
             }
+            closedir(dir);
         }
     }
 
-    auto devicePath = getEnv(ENV_DEVICE_PATH, nameToConfigPath(detectedName));
-    if (exists(devicePath)) {
-        Log::debug("Using %s for device config", devicePath.c_str());
-        m_deviceIni = std::make_shared<IniParser>(devicePath);
-    } else {
-        Log::info("No device config found!");
-    }
+    if (!m_configNode.IsNull())
+        Log::debug("Found device yaml with name: %s", m_configNode["Name"].as<std::string>().c_str());
+    else
+        Log::info("No device yaml config found!");
+
+    // Lets merge platfrom detected names
+    // Override if valid
+    if (m_platform->hasValidName() && !contains("Name"))
+        m_configNode["Name"] = m_platform->name();
+
+    if (m_platform->hasValidPrettyName() && !contains("PrettyName"))
+        m_configNode["PrettyName"] = m_platform->prettyName();
 
 #ifdef ENABLE_LEGACY
-    if (exists(nameToPath(detectedName, LEGACY_PATH)))
-        getLegacyEnv(nameToPath(detectedName, LEGACY_PATH));
+    mergeLegacy(detectedName);
 #endif
 
-    auto defaultPath = getEnv(ENV_DEFAULT_PATH, nameToConfigPath(DEFAULT_CONFIG_PATH));
-    if (exists(defaultPath)) {
+    auto defaultPath = getDefaultFile();
+    if (utils::path::exists(defaultPath)) {
         Log::debug("Using %s for default config", defaultPath.c_str());
-        m_defaultIni = std::make_shared<IniParser>(defaultPath);
+        auto defaultNode = YAML::LoadFile(defaultPath)["defaults"];
+
+        // Lets merge all nodes to one
+        // First we merge defaults from driverType
+        auto driverType = DeviceInfo::driverTypeToString(m_platform->driverType());
+        mergeWithConfigNode(defaultNode[driverType]);
+
+        std::string type = "desktop";
+        if (m_configNode["DeviceType"].IsDefined())
+            type = m_configNode["DeviceType"].as<std::string>();
+        else if (defaultNode["default"]["DeviceType"].IsDefined())
+            type = defaultNode["default"]["DeviceType"].as<std::string>();
+
+        mergeWithConfigNode(defaultNode[type]);
+        mergeWithConfigNode(defaultNode["default"]);
     } else {
         Log::info("No default config found!");
     }
 }
 
-bool Config::contains(std::string prop, bool defaults)
+void Config::mergeWithConfigNode(YAML::Node node)
 {
-    if (defaults) {
-        if (!m_defaultIni)
-            return false;
-
-        auto detected = DeviceInfo::deviceTypeToString(m_platform->deviceType());
-        if (m_defaultIni->sections().count(detected)) {
-            if (m_defaultIni->contains(detected, prop)) 
-                return true;
+    for (auto n : node) {
+        if (!m_configNode[n.first.as<std::string>()].IsDefined()) {
+            Log::debug("MergeWithConfigNode value: %s", n.first.as<std::string>().c_str());
+            m_configNode[n.first.as<std::string>()] = n.second;
         }
-        auto driverType = DeviceInfo::driverTypeToString(m_platform->driverType());
-        if (m_defaultIni->sections().count(driverType)) {
-            if (m_defaultIni->contains(driverType, prop)) 
-                return true;
-        }
-        return m_defaultIni->contains(DEFAULT_SECTION, prop);
-    } else {
-#ifdef ENABLE_LEGACY
-        if (!toLegacy(prop).empty() && !!m_legacyEnv.count(toLegacy(prop))) {
-            Log::debug("Legacy prop found!");
-            return true;
-        }
-#endif
-
-        if (!m_deviceIni)
-            return false;
-        return m_deviceIni->contains(DEVICE_SECTION, prop); 
     }
-
 }
 
-std::string Config::get(std::string prop, bool defaults)
+bool Config::contains(std::string prop)
 {
-    return get(prop, defaults, "");
+    return m_configNode[prop].IsDefined();
 }
 
-std::string Config::get(std::string prop, bool defaults, std::string defaultValue)
+std::string Config::get(std::string prop)
 {
-    if (defaults) {
-        if (!m_defaultIni)
-            return defaultValue;
+    return get(prop, "");
+}
 
-        auto detected = DeviceInfo::deviceTypeToString(m_platform->deviceType());
-        if (m_defaultIni->sections().count(detected)) {
-            if (m_defaultIni->contains(detected, prop)) 
-                return m_defaultIni->get(detected, prop, defaultValue);
-        }
-        auto driverType = DeviceInfo::driverTypeToString(m_platform->driverType());
-        if (m_defaultIni->sections().count(driverType)) {
-            if (m_defaultIni->contains(driverType, prop)) 
-                return m_defaultIni->get(driverType, prop, defaultValue);
-        }
-       return m_defaultIni->get(DEFAULT_SECTION, prop, defaultValue);
-    } else {
-        std::string ret = defaultValue;
+std::string Config::get(std::string prop, std::string defaultValue)
+{
+    if (!contains(prop))
+        return defaultValue;
 
-#ifdef ENABLE_LEGACY
-        if (!toLegacy(prop).empty() && !!m_legacyEnv.count(toLegacy(prop))) {
-            Log::debug("Did not find new prop, but found legacy prop, using that");
-            ret = m_legacyEnv.at(toLegacy(prop));
+    // TODO: allow to return vectors
+    if (m_configNode[prop].IsSequence()) {
+        std::string ret;
+        auto siz = m_configNode[prop].size();
+        for (std::size_t i=0;i<siz;i++) {
+            ret.append(m_configNode[prop][i].as<std::string>());
+            if (i != siz)
+                ret.append(",");
         }
-#endif
-        if (m_deviceIni && m_deviceIni->contains(DEVICE_SECTION, prop))
-            ret = m_deviceIni->get(DEVICE_SECTION, prop, defaultValue);
-
         return ret;
-    } 
-}
-
-bool Config::exists(std::string name)
-{
-    Log::verbose("Seeing if %s exists", name.c_str());
-    std::ifstream infile(name);
-    return infile.good();   
-}
-
-std::string Config::nameToConfigPath(std::string name)
-{
-    std::string path(getEnv(ENV_PATH, CONFIG_PATH));
-    if (path.back() != '/')
-        path.append("/");
-    path.append(name);
-    path.append(".conf");
-
-    return path;
-}
-
-std::string Config::nameToPath(std::string name, std::string confpath)
-{
-    std::string path(confpath);
-    path.append(name);
-    path.append(".conf");
-    return path;
-}
-
-std::string Config::getEnv(const char *name, std::string dval)
-{
-    const char* env = getenv(name);
-    if (env) {
-         Log::verbose("Using provided env %s", env);
-        return std::string(env);
     }
 
-    return dval;
+    return m_configNode[prop].as<std::string>();
 }
 
 #ifdef ENABLE_LEGACY
 // Legacy
+void Config::mergeLegacy(std::string device)
+{
+    std::string dfile = LEGACY_PATH;
+    dfile.append(device);
+    dfile.append(".conf");
+    if (!utils::path::exists(dfile)) {
+        Log::debug("Did not find legacy file: %s", dfile.c_str());
+        return;
+    }
+
+    std::ifstream file(dfile);
+    std::string str;
+    std::map<std::string, std::string> legacyEnv;
+
+    while (std::getline(file, str))
+    {
+        auto splitted = utils::string::split(str, *"=");
+        legacyEnv[splitted[0]] = splitted[1];
+        Log::verbose("Found legacy env %s = %s", splitted[0].c_str(), splitted[1].c_str());
+    }
+
+    for (auto prop : legacyEnv) {
+        auto key = toLegacy(prop.first);
+        if (!key.empty() && contains(key)) {
+            Log::debug("Merging legacy prop as it's not set by devicefile: %s", key.c_str());
+            m_configNode[key] = prop.second;
+        }
+    }
+}
+
 std::string Config::toLegacy(std::string str)
 {
     Log::verbose("toLegacy %s", str.c_str());
@@ -224,29 +225,5 @@ std::string Config::toLegacy(std::string str)
     if (str == "DeviceType")
         return LEGACY_FORM;
     return std::string();
-}
-
-std::vector<std::string> Config::split(std::string strToSplit, char delimeter)
-{
-    std::stringstream ss(strToSplit);
-    std::string item;
-    std::vector<std::string> splittedStrings;
-    while (std::getline(ss, item, delimeter))
-    {
-       splittedStrings.push_back(item);
-    }
-    return splittedStrings;
-}
-
-void Config::getLegacyEnv(std::string dfile)
-{
-    std::ifstream file(dfile);
-    std::string str;
-    while (std::getline(file, str))
-    {
-        auto splitted = split(str, *"=");
-        m_legacyEnv[splitted[0]] = splitted[1];
-        Log::verbose("Found legacy env %s = %s", splitted[0].c_str(), splitted[1].c_str());
-    }
 }
 #endif

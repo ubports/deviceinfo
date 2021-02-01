@@ -19,10 +19,25 @@
 #pragma once
 
 #include <memory>
+#include <yaml-cpp/yaml.h>
+
+#define DEFAULT_CONFIG_FILE "default.yaml"
+
+#define DEFAULT_SECTION "default"
+#define DEVICE_SECTION "device"
+
+#define ENV_CONFIG_PATH "DEVICEINFO_CONFIG_PATH"
+#define ENV_DEFAULT_CONFIG "DEVICEINFO_DEFAULT_CONFIG"
+#define ENV_DEVICE_PATH "DEVICEINFO_DEVICE_PATH"
+#define ENV_DEVICE_NAME "DEVICEINFO_DEVICE_NAME"
 
 #ifdef ENABLE_LEGACY
-#include <map>
-#include <vector>
+#define LEGACY_GRID "GRID_UNIT_PX"
+#define LEGACY_DPR "QTWEBKIT_DPR"
+#define LEGACY_ORI "NATIVE_ORIENTATION"
+#define LEGACY_FORM "FORM_FACTOR"
+
+#define LEGACY_PATH "/etc/ubuntu-touch-session.d/"
 #endif
 
 class Platform;
@@ -31,24 +46,18 @@ class Config {
 public:
     Config(std::shared_ptr<Platform> platform);
 
-    std::string get(std::string prop, bool defaults, std::string defaultValue);
-    std::string get(std::string prop, bool defaults);
-    bool contains(std::string prop, bool defaults);
+    std::string get(std::string prop, std::string defaultValue);
+    std::string get(std::string prop);
+    bool contains(std::string prop);
 
-    static bool exists(std::string name);
 private:
-    static std::string nameToConfigPath(std::string name);
-    static std::string nameToPath(std::string name, std::string confpath);
-    static std::string getEnv(const char *name, std::string dval);
+    void mergeWithConfigNode(YAML::Node node);
 
 #ifdef ENABLE_LEGACY
-    void getLegacyEnv(std::string dfile);
-    std::vector<std::string> split(std::string strToSplit, char delimeter);
-    std::map<std::string, std::string> m_legacyEnv;
+    void mergeLegacy(std::string device);
     std::string toLegacy(std::string str);
 #endif
 
     std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<IniParser> m_deviceIni;
-    std::shared_ptr<IniParser> m_defaultIni;
+    YAML::Node m_configNode;
 };

@@ -7,11 +7,11 @@ if(ANDROIDPROPS_FOUND)
 endif()
 
 add_library(${TARGET} SHARED
-    iniparser.cpp
     config.cpp
     device.cpp
     deviceinfo.cpp
     logger.cpp
+    utils.cpp
 
     platform/platform.cpp
     platform/linux.cpp
@@ -20,9 +20,11 @@ add_library(${TARGET} SHARED
 
 add_definitions(-DENABLE_LEGACY=1)
 add_definitions(-DCONFIG_PATH="${CONFIG_PATH}")
+add_definitions(-DDEVICES_PATH="${CONFIG_PATH}/devices")
 
 target_link_libraries(${TARGET}
     ${ANDROIDPROPS_LDFLAGS}
+    ${YAMLCPP_LDFLAGS}
 )
 
 set_target_properties(

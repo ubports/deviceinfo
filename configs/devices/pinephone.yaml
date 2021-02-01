@@ -1,0 +1,11 @@
+pinephone:
+  Names:
+    - PinePhone Don't be evil development kit
+    - Pine64 PinePhone Developer Batch (1.0)
+    - Pine64 PinePhone Braveheart (1.1)
+    - Pine64 PinePhone (1.2)
+  PrettyName: PinePhone
+  DeviceType: phone
+  GridUnit: 14
+  PrimaryOrientation: Portrait
+  SensorfwConfig: /etc/deviceinfo/sensorfw/pinephone.conf

@@ -50,32 +50,16 @@ Device::Device() :
 
 std::string Device::name()
 {
-    if (m_config->contains("Name", false)) {
-        return m_config->get("Name", false);
-    }
-
-    if (m_platform->hasValidName()) {
-        return m_platform->name();
-    }
-
     // If all else fails, platform returns default value for the
     // current platform use this if config has no set value
-    return m_config->get("Name", true, m_platform->name());
+    return m_config->get("Name", m_platform->name());
 }
 
 std::string Device::prettyName()
 {
-    if (m_config->contains("PrettyName", false)) {
-        return m_config->get("PrettyName", false);
-    }
-
-    if (m_platform->hasValidPrettyName()) {
-        return m_platform->prettyName();
-    }
-
     // If all else fails, platform returns default value for the
     // current platform use this if config has no set value
-    return m_config->get("PrettyName", true, m_platform->prettyName());
+    return m_config->get("PrettyName", m_platform->prettyName());
 }
 
 int Device::gridUnit()
@@ -91,33 +75,17 @@ int Device::gridUnit()
 }
 
 std::string Device::get(std::string prop, std::string defaultValue) {
-    if (m_config->contains(prop, false)) {
-        Log::verbose("get found in device config");
-        return m_config->get(prop, false);
-    }
-    return m_config->get(prop, true, defaultValue);
+    return m_config->get(prop, defaultValue);
 }
 
 bool Device::contains(std::string prop) {
-    if (m_config->contains(prop, false)) {
-        return true;
-    }
-    return m_config->contains(prop, true);
+    return m_config->contains(prop);
 }
 
 DeviceInfo::DeviceType Device::deviceType()
 {
-    if (m_config->contains("DeviceType", false)) {
-        auto typeStr = m_config->get("DeviceType", false);
-        return DeviceInfo::deviceTypeFromString(typeStr);
-    }
-
-    if (m_platform->hasValidDeviceType()) {
-        return m_platform->deviceType();
-    }
-
     auto defaultValue = DeviceInfo::deviceTypeToString(m_platform->deviceType());
-    return DeviceInfo::deviceTypeFromString(m_config->get("DeviceType", true, defaultValue));
+    return DeviceInfo::deviceTypeFromString(m_config->get("DeviceType", defaultValue));
 }
 
 DeviceInfo::DriverType Device::driverType()

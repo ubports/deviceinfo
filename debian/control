@@ -6,6 +6,7 @@ Build-Depends: cmake (>= 2.8.10),
                debhelper (>= 9),
                pkg-config,
                libandroid-properties-dev,
+               libyaml-cpp-dev,
                googletest | google-mock,
 Maintainer: Marius Gripsgard <marius@ubports.com>
 Standards-Version: 3.9.5

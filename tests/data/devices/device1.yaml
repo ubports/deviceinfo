@@ -1,0 +1,7 @@
+device1:
+  Names: 
+    - device1-alias1
+    - device1-alias2
+  PrettyName: Device 1
+  DeviceType: phone
+  GridUnit: 18

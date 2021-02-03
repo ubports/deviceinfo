@@ -19,43 +19,10 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "platform/platform.h"
 #include "config.h"
 #include "logger.h"
 
-class DummyPlatform : public Platform
-{
-public:
-    DummyPlatform() {};
-
-    DummyPlatform(std::string name, std::string pName) :
-                  m_name(name),
-                  m_pName(pName) {};
-
-    DummyPlatform(std::string name, std::string pName,
-                  DeviceInfo::DeviceType deType,
-                  DeviceInfo::DriverType drType) :
-                  m_name(name),
-                  m_pName(pName),
-                  m_deType(deType),
-                  m_drType(drType) {};
-
-    std::string name() override { return m_name; };
-    std::string prettyName() override { return m_pName; };
-    DeviceInfo::DeviceType  deviceType() override { return m_deType; };
-    DeviceInfo::DriverType driverType() override { return m_drType; };
-
-    bool hasValidName() override { return !m_name.empty(); };
-    bool hasValidPrettyName() override { return !m_pName.empty(); };
-    bool hasValidDeviceType() override { return m_deType != DeviceInfo::DeviceType::Unknown; };
-
-private:
-    std::string m_name;
-    std::string m_pName;
-    DeviceInfo::DeviceType m_deType;
-    DeviceInfo::DriverType m_drType;
-};
-
+#include "mock_platform.h"
 
 class BaseConfigTest : public ::testing::Test
 {

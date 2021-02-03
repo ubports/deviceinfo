@@ -46,6 +46,9 @@ public:
 
     DeviceInfo(PrintMode printMode = PrintMode::Info);
 
+    // For tests
+    DeviceInfo(Device *device);
+
     // Internal logging
     void setPrintMode(PrintMode printMode);
 

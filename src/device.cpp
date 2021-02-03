@@ -48,6 +48,12 @@ Device::Device() :
 {
 }
 
+Device::Device(std::shared_ptr<Platform> platform, std::shared_ptr<Config> config) :
+    m_platform(platform),
+    m_config(config)
+{
+}
+
 std::string Device::name()
 {
     // If all else fails, platform returns default value for the

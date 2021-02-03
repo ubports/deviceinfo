@@ -1,21 +1,20 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${GMOCK_INCLUDE_DIRS}
 )
 
 add_definitions(-DENABLE_LEGACY=1)
 add_definitions(-DTEST_DEFAULT_DIR="${TEST_DATA_DIR}")
 add_definitions(-DTEST_DEVICE_DIR="${TEST_DATA_DIR}/devices")
 
-
-
 macro(declare_test test testname)
-    message(${testname})
     add_executable(${testname} ${testname}.cpp)
     target_link_libraries(${testname}
         ${TARGET}
 
         ${GTEST_LIBRARIES}
         ${GTEST_BOTH_LIBRARIES}
+        ${GMOCK_LIBRARIES}
     )
 
     if(TEST_XML_OUTPUT)
@@ -33,6 +32,7 @@ macro(declare_test test testname)
 endmacro(declare_test testname)
 
 declare_test(TestConfig tst_config)
+declare_test(TestDeviceinfo tst_deviceinfo)
 
 find_package(CoverageReport)
 enable_coverage_report(

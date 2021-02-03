@@ -34,11 +34,15 @@ std::string join(std::string first, std::string second) {
     return first;
 }
 
-std::string join(std::string first, std::string second, std::string file, std::string suffix) {
-    auto path = join(join(first, second), file);
+std::string join(std::string first, std::string file, std::string suffix) {
+    auto path = join(first, file);
     path.append(suffix);
 
     return path;
+}
+
+std::string join(std::string first, std::string second, std::string file, std::string suffix) {
+    return join(join(first, second), file, suffix);
 }
 
 bool exists(std::string name)
@@ -78,6 +82,17 @@ std::vector<std::string> split(std::string strToSplit, char delimeter)
     }
     return splittedStrings;
 } // string
+
+
+bool endsWith(const std::string& str, const std::string& suffix)
+{
+    return str.size() >= suffix.size() && 0 == str.compare(str.size()-suffix.size(), suffix.size(), suffix);
+}
+
+bool startsWith(const std::string& str, const std::string& prefix)
+{
+    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+}
 
 };
 }; // utils

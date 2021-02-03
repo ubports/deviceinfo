@@ -38,6 +38,8 @@
 #define LEGACY_FORM "FORM_FACTOR"
 
 #define LEGACY_PATH "/etc/ubuntu-touch-session.d/"
+#define ENV_LEGACY_PATH "DEVICEINFO_LEGACY_PATH"
+
 #endif
 
 class Platform;
@@ -55,7 +57,7 @@ private:
 
 #ifdef ENABLE_LEGACY
     void mergeLegacy(std::string device);
-    std::string toLegacy(std::string str);
+    std::string fromLegacy(std::string str);
 #endif
 
     std::shared_ptr<Platform> m_platform;

@@ -67,6 +67,7 @@ public:
         unsetenv(ENV_DEFAULT_CONFIG);
         unsetenv(ENV_DEVICE_PATH);
         unsetenv(ENV_DEVICE_NAME);
+        unsetenv(ENV_LEGACY_PATH);
     }
 };
 
@@ -195,8 +196,65 @@ TEST_F(DeviceDefaultConfigTest, testDeviceOverridesDefault)
     auto config = std::make_shared<Config>(platform);
 
     EXPECT_TRUE(config->contains("Name"));
-    EXPECT_EQ(config->get("Name", ""), "vendor1-device1");
+    EXPECT_EQ(config->get("Name"), "vendor1-device1");
+
+    EXPECT_TRUE(config->contains("DetectedName"));
+    EXPECT_EQ(config->get("DetectedName"), "vendor1-device1");
 
     EXPECT_TRUE(config->contains("PrettyName"));
-    EXPECT_EQ(config->get("PrettyName", ""), "Vendor 1 Device 1");
+    EXPECT_EQ(config->get("PrettyName"), "Vendor 1 Device 1");
+}
+
+TEST_F(DeviceDefaultConfigTest, testDeviceAlias)
+{
+    auto platform = std::make_shared<DummyPlatform>("device1-alias2", "Dummy Device");
+    auto config = std::make_shared<Config>(platform);
+
+    EXPECT_TRUE(config->contains("Name"));
+    EXPECT_EQ(config->get("Name"), "device1");
+
+    EXPECT_TRUE(config->contains("DetectedName"));
+    EXPECT_EQ(config->get("DetectedName"), "device1-alias2");
+
+    EXPECT_TRUE(config->contains("PrettyName"));
+    EXPECT_EQ(config->get("PrettyName"), "Device 1");
+}
+
+TEST_F(DeviceDefaultConfigTest, testVectorGet)
+{
+    auto platform = std::make_shared<DummyPlatform>("vendor1-device1", "Dummy Device");
+    auto config = std::make_shared<Config>(platform);
+
+    EXPECT_TRUE(config->contains("SupportedOrientations"));
+    EXPECT_EQ(config->get("SupportedOrientations"), "Portrait,InvertedPortrait,Landscape,InvertedLandscape");
+}
+
+TEST_F(DeviceDefaultConfigTest, testGetMoDefault)
+{
+    auto platform = std::make_shared<DummyPlatform>("vendor1-device1", "Dummy Device");
+    auto config = std::make_shared<Config>(platform);
+
+    EXPECT_TRUE(config->contains("Name"));
+    EXPECT_EQ(config->get("Name"), "vendor1-device1");
+}
+
+
+TEST_F(DefaultsConfigTest, testLegacyProps)
+{
+    setenv(ENV_LEGACY_PATH, TEST_DEFAULT_DIR, true);
+
+    auto platform = std::make_shared<DummyPlatform>("legacy", "Dummy Device");
+    auto config = std::make_shared<Config>(platform);
+
+    EXPECT_TRUE(config->contains("GridUnit"));
+    EXPECT_EQ(config->get("GridUnit"), "16");
+
+    EXPECT_TRUE(config->contains("WebkitDpr"));
+    EXPECT_EQ(config->get("WebkitDpr"), "1.8");
+
+    EXPECT_TRUE(config->contains("PrimaryOrientation"));
+    EXPECT_EQ(config->get("PrimaryOrientation"), "InvertedLandscape");
+
+    EXPECT_TRUE(config->contains("DeviceType"));
+    EXPECT_EQ(config->get("DeviceType"), "tablet");
 }

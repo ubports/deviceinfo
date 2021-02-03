@@ -83,16 +83,19 @@ Config::Config(std::shared_ptr<Platform> platform)
 
                 auto yaml = YAML::LoadFile(file);
                 for (auto a : yaml) {
-                    if (a.first.IsDefined() && a.first.as<std::string>() == detectedName) {
+                    auto name = a.first.as<std::string>();
+                    if (a.first.IsDefined() && name == detectedName) {
                         m_configNode = std::move(a.second);
+                        m_configNode["DetectedName"] = detectedName;
                         if (!m_configNode["Name"].IsDefined())
-                           m_configNode["Name"] = detectedName;
+                           m_configNode["Name"] = name;
                     } else if (a.second["Names"].IsDefined()) {
                         auto names = a.second["Names"].as<std::vector<std::string>>();
                         if (std::find(std::begin(names), std::end(names), detectedName) != std::end(names)) {
                             m_configNode = std::move(a.second);
+                            m_configNode["DetectedName"] = detectedName;
                             if (!m_configNode["Name"].IsDefined())
-                                m_configNode["Name"] = detectedName;
+                                m_configNode["Name"] = name;
                         }
                     }
                 }
@@ -172,8 +175,9 @@ std::string Config::get(std::string prop, std::string defaultValue)
         auto siz = m_configNode[prop].size();
         for (std::size_t i=0;i<siz;i++) {
             ret.append(m_configNode[prop][i].as<std::string>());
-            if (i != siz)
-                ret.append(",");
+            if (i >= siz-1)
+                break;
+            ret.append(",");
         }
         return ret;
     }
@@ -185,9 +189,9 @@ std::string Config::get(std::string prop, std::string defaultValue)
 // Legacy
 void Config::mergeLegacy(std::string device)
 {
-    std::string dfile = LEGACY_PATH;
-    dfile.append(device);
-    dfile.append(".conf");
+    std::string dfile = utils::path::join(utils::env::get(ENV_LEGACY_PATH,
+                                                          LEGACY_PATH), device,
+                                                          ".conf");
     if (!utils::path::exists(dfile)) {
         Log::debug("Did not find legacy file: %s", dfile.c_str());
         return;
@@ -200,30 +204,35 @@ void Config::mergeLegacy(std::string device)
     while (std::getline(file, str))
     {
         auto splitted = utils::string::split(str, *"=");
+        if (splitted.size() != 2)
+            continue;
+
+        if (utils::string::startsWith(splitted[1], "\"") && utils::string::endsWith(splitted[1], "\""))
+            splitted[1] = splitted[1].substr(1, splitted[1].size()-2);
         legacyEnv[splitted[0]] = splitted[1];
         Log::verbose("Found legacy env %s = %s", splitted[0].c_str(), splitted[1].c_str());
     }
 
     for (auto prop : legacyEnv) {
-        auto key = toLegacy(prop.first);
-        if (!key.empty() && contains(key)) {
+        auto key = fromLegacy(prop.first);
+        if (!key.empty() && !contains(key)) {
             Log::debug("Merging legacy prop as it's not set by devicefile: %s", key.c_str());
             m_configNode[key] = prop.second;
         }
     }
 }
 
-std::string Config::toLegacy(std::string str)
+std::string Config::fromLegacy(std::string str)
 {
-    Log::verbose("toLegacy %s", str.c_str());
-    if (str == "GridUnit")
-        return LEGACY_GRID;
-    if (str == "WebkitDpr")
-        return LEGACY_DPR;
-    if (str == "PrimaryOrientation")
-        return LEGACY_ORI;
-    if (str == "DeviceType")
-        return LEGACY_FORM;
+    Log::verbose("fromLegacy %s", str.c_str());
+    if (str ==  LEGACY_GRID)
+        return "GridUnit";
+    if (str == LEGACY_DPR)
+        return "WebkitDpr";
+    if (str == LEGACY_ORI)
+        return "PrimaryOrientation";
+    if (str == LEGACY_FORM)
+        return "DeviceType";
     return std::string();
 }
 #endif

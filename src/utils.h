@@ -25,6 +25,7 @@ namespace utils {
 namespace path {
 
 std::string join(std::string first, std::string second);
+std::string join(std::string first, std::string file, std::string suffix);
 std::string join(std::string first, std::string second, std::string file, std::string suffix);
 bool exists(std::string name);
 
@@ -39,6 +40,8 @@ std::string get(const char *name, std::string dval);
 namespace string {
 
 std::vector<std::string> split(std::string strToSplit, char delimeter);
+bool endsWith(const std::string& str, const std::string& suffix);
+bool startsWith(const std::string& str, const std::string& prefix);
 
 }; // string
 }; // utils

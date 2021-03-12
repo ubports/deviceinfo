@@ -22,14 +22,14 @@
 class MockPlatform : public Platform
 {
 public:
-    MOCK_METHOD(std::string, name, (), (override));
-    MOCK_METHOD(std::string, prettyName, (), (override));
-    MOCK_METHOD(DeviceInfo::DeviceType, deviceType, (), (override));
-    MOCK_METHOD(DeviceInfo::DriverType, driverType, (), (override));
+    MOCK_METHOD0(name, std::string());
+    MOCK_METHOD0(prettyName, std::string());
+    MOCK_METHOD0(deviceType, DeviceInfo::DeviceType());
+    MOCK_METHOD0(driverType, DeviceInfo::DriverType());
 
-    MOCK_METHOD(bool, hasValidName, (), (override));
-    MOCK_METHOD(bool, hasValidPrettyName, (), (override));
-    MOCK_METHOD(bool, hasValidDeviceType, (), (override));
+    MOCK_METHOD0(hasValidName, bool());
+    MOCK_METHOD0(hasValidPrettyName, bool());
+    MOCK_METHOD0(hasValidDeviceType, bool());
 };
 
 class DummyPlatform : public Platform

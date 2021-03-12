@@ -23,13 +23,13 @@
 class MockDevice : public Device
 {
 public:
-    MOCK_METHOD(std::string, name, (), (override));
-    MOCK_METHOD(std::string, prettyName, (), (override));
-    MOCK_METHOD(DeviceInfo::DeviceType, deviceType, (), (override));
-    MOCK_METHOD(DeviceInfo::DriverType, driverType, (), (override));
+    MOCK_METHOD0(name, std::string());
+    MOCK_METHOD0(prettyName, std::string());
+    MOCK_METHOD0(deviceType, DeviceInfo::DeviceType());
+    MOCK_METHOD0(driverType, DeviceInfo::DriverType());
 
-    MOCK_METHOD(int, gridUnit, (), (override));
+    MOCK_METHOD0(gridUnit, int());
 
-    MOCK_METHOD(std::string, get, (std::string, std::string), (override));
-    MOCK_METHOD(bool, contains, (std::string), (override));
+    MOCK_METHOD2(get, std::string(std::string, std::string));
+    MOCK_METHOD1(contains, bool(std::string));
 };

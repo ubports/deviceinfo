@@ -33,6 +33,7 @@ endmacro(declare_test testname)
 
 declare_test(TestConfig tst_config)
 declare_test(TestDeviceinfo tst_deviceinfo)
+declare_test(TestUtils tst_utils)
 
 find_package(CoverageReport)
 enable_coverage_report(

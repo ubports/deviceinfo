@@ -33,7 +33,22 @@ bool exists(std::string name);
 
 namespace env {
 
-std::string get(const char *name, std::string dval);
+std::string get(const char *name, std::string dval = "");
+bool set(const char *name, std::string val, bool overwrite = true);
+bool unset(const char *name);
+
+class SetUnsetAfter {
+public:
+    SetUnsetAfter(const char *name, std::string val, bool overwrite = true) : name_(name) {
+        set(name_, val, overwrite);
+    };
+
+    ~SetUnsetAfter() {
+        unset(name_);
+    };
+private:
+    const char *name_;
+};
 
 }; // env
 

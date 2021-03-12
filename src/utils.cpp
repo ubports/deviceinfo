@@ -67,6 +67,16 @@ std::string get(const char *name, std::string dval)
     return dval;
 }
 
+bool set(const char *name, std::string val, bool overwrite)
+{
+    return setenv(name, val.c_str(), overwrite) == 0;
+}
+
+bool unset(const char *name)
+{
+    return unsetenv(name) == 0;
+}
+
 }; // env
 
 namespace string {

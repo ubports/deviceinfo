@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 UBports foundation.
+ * Copyright (C) 2021 UBports foundation.
  * Author(s): Marius Gripsgard <marius@ubports.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -16,27 +16,20 @@
  *
  */
 
-#pragma once
+#include <gmock/gmock.h>
 
-#include "deviceinfo.h"
+#include "device.h"
 
-class Config;
-class Platform;
-class Device {
+class MockDevice : public Device
+{
 public:
-    Device();
-    Device(std::shared_ptr<Platform> platform, std::shared_ptr<Config> config);
+    MOCK_METHOD0(name, std::string());
+    MOCK_METHOD0(prettyName, std::string());
+    MOCK_METHOD0(deviceType, DeviceInfo::DeviceType());
+    MOCK_METHOD0(driverType, DeviceInfo::DriverType());
 
-    virtual std::string name();
-    virtual std::string prettyName();
-    virtual DeviceInfo::DeviceType deviceType();
-    virtual DeviceInfo::DriverType driverType();
-    virtual int gridUnit();
+    MOCK_METHOD0(gridUnit, int());
 
-    // get props that does not have auto detection
-    virtual std::string get(std::string prop, std::string defaultValue);
-    virtual bool contains(std::string prop);
-private:
-    std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<Config> m_config;
+    MOCK_METHOD2(get, std::string(std::string, std::string));
+    MOCK_METHOD1(contains, bool(std::string));
 };

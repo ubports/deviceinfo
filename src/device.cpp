@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "logger.h"
+#include "platform/platform.h"
 
 #include <memory>
 #include <string>
@@ -42,40 +43,29 @@
 #define LINUX_MODEL "/proc/device-tree/model"
 
 Device::Device() :
-    m_isHalium(hasHaliumProp(DEVICE_PROP_KEY)),
-    m_config(std::make_shared<Config>(this))
+    m_platform(Platform::create()),
+    m_config(std::make_shared<Config>(m_platform))
+{
+}
+
+Device::Device(std::shared_ptr<Platform> platform, std::shared_ptr<Config> config) :
+    m_platform(platform),
+    m_config(config)
 {
 }
 
 std::string Device::name()
 {
-    if (m_config->contains("Name", false)) {
-        return m_config->get("Name", false);
-    }
-
-    auto detect = detectName();
-    if (detect != "unknown")
-        return detect;
-
-    // If all else fails
-    return m_config->get("Name", true, "generic");
+    // If all else fails, platform returns default value for the
+    // current platform use this if config has no set value
+    return m_config->get("Name", m_platform->name());
 }
 
 std::string Device::prettyName()
 {
-    if (m_config->contains("PrettyName", false)) {
-        return m_config->get("PrettyName", false);
-    }
-
-    if (m_isHalium) {
-        if (hasHaliumProp(VENDOR_MODEL_PROP_KEY))
-            return getHaliumProp(VENDOR_MODEL_PROP_KEY);
-        else if (hasHaliumProp(MODEL_PROP_KEY))
-            return getHaliumProp(MODEL_PROP_KEY);
-    }
-
-    // If all else fails
-    return m_config->get("PrettyName", true, "Generic device");
+    // If all else fails, platform returns default value for the
+    // current platform use this if config has no set value
+    return m_config->get("PrettyName", m_platform->prettyName());
 }
 
 int Device::gridUnit()
@@ -91,107 +81,20 @@ int Device::gridUnit()
 }
 
 std::string Device::get(std::string prop, std::string defaultValue) {
-    if (m_config->contains(prop, false)) {
-        Log::verbose("get found in device config");
-        return m_config->get(prop, false);
-    }
-    return m_config->get(prop, true, defaultValue);
+    return m_config->get(prop, defaultValue);
 }
 
 bool Device::contains(std::string prop) {
-    if (m_config->contains(prop, false)) {
-        return true;
-    }
-    return m_config->contains(prop, true);
+    return m_config->contains(prop);
 }
-
 
 DeviceInfo::DeviceType Device::deviceType()
 {
-    if (m_config->contains("DeviceType", false)) {
-        auto typeStr = m_config->get("DeviceType", false);
-        return DeviceInfo::deviceTypeFromString(typeStr);
-    }
-
-    auto detected = detectType(true);
-    if (detected != DeviceInfo::DeviceType::Unknown)
-        return detected;
-
-    return DeviceInfo::deviceTypeFromString(m_config->get("DeviceType", true, "desktop"));
-}
-
-std::string Device::detectName() {
-    if (m_isHalium) {
-        if (hasHaliumProp(VENDOR_DEVICE_PROP_KEY))
-            return getHaliumProp(VENDOR_DEVICE_PROP_KEY);
-        else if (hasHaliumProp(DEVICE_PROP_KEY))
-            return getHaliumProp(DEVICE_PROP_KEY);
-    }
-
-    // If it's not halium or does not have device prop, try dtb
-    auto model = readFile(LINUX_MODEL);
-    if (!model.empty())
-        return model;
-
-    return "unknown";
-}
-
-DeviceInfo::DeviceType Device::detectType(bool returnUknown) {
-    if (m_isHalium) {
-        auto chara = getHaliumProp(CHARA_PROP_KEY);
-        if (chara.find("tablet") != std::string::npos)
-            return DeviceInfo::DeviceType::Tablet;
-
-        // As this is a halium device, the best guess will be phone
-        return DeviceInfo::DeviceType::Phone;
-    }
-
-    // At this point we guess it's a desktop
-    return returnUknown ? DeviceInfo::DeviceType::Unknown : DeviceInfo::DeviceType::Desktop;
+    auto defaultValue = DeviceInfo::deviceTypeToString(m_platform->deviceType());
+    return DeviceInfo::deviceTypeFromString(m_config->get("DeviceType", defaultValue));
 }
 
 DeviceInfo::DriverType Device::driverType()
 {
-    if (m_isHalium)
-        return DeviceInfo::DriverType::Halium;
-
-    return DeviceInfo::DriverType::Linux;
-}
-
-std::string Device::getHaliumProp(const char* prop)
-{
-    return getHaliumProp(prop, "");
-}
-
-std::string Device::getHaliumProp(const char* prop, const char* default_value)
-{
-    std::string ret;
-#ifdef HAVE_PROPS
-    char value[PROP_VALUE_MAX];
-    property_get(prop, value, default_value);
-    ret = value;
-#endif
-    return ret;
-}
-
-bool Device::hasHaliumProp(const char* key)
-{
-    bool ret = false;
-#ifdef HAVE_PROPS
-    char const* default_value = "hasnodevice";
-    char value[PROP_VALUE_MAX];
-    property_get(key, value, default_value);
-    ret = strcmp(value, default_value) != 0;
-#endif
-    return ret;
-}
-
-std::string Device::readFile(std::string file)
-{
-    std::ifstream model(file);
-    std::string ret;
-    if (model.good())
-        ret = std::string(std::istreambuf_iterator<char>{model},
-                          std::istreambuf_iterator<char>());
-    return ret;
+    return m_platform->driverType();
 }

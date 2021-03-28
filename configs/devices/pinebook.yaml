@@ -1,0 +1,5 @@
+pinebook:
+  Names:
+    - pinebook
+  PrettyName: PineBook
+  DeviceType: desktop

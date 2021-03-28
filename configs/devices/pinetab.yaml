@@ -1,0 +1,10 @@
+device:
+  Names:
+    - pinetab
+  PrettyName: PineTab
+  DeviceType: tablet
+  GridUnit: 9
+  SupportedOrientations:
+    - InvertedLandscape
+  PrimaryOrientation: InvertedLandscape
+  WebkitDpr: 1

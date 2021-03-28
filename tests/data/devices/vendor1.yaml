@@ -1,0 +1,27 @@
+default:
+  GridUnit: 5
+  Vendor: Vendor 1
+
+vendor1-device3:
+  Names: 
+    - vendor1-device3-alias1
+    - vendor1-device3-alias2
+  PrettyName: Vendor 1 Device 3
+  DeviceType: phone
+  GridUnit: 18
+
+vendor1-device1:
+  Names: 
+    - vendor1-device1-alias1
+    - vendor1-device1-alias2
+  PrettyName: Vendor 1 Device 1
+  DeviceType: tablet
+  GridUnit: 10
+
+
+random-device503:
+  Names: 
+    - random-device503-alias1
+    - random-device503-alias2
+  PrettyName: Random device 503
+  DeviceType: desktop

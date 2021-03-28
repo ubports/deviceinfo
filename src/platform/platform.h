@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 UBports foundation.
+ * Copyright (C) 2020 UBports foundation.
  * Author(s): Marius Gripsgard <marius@ubports.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -18,25 +18,23 @@
 
 #pragma once
 
+#include <memory>
+
 #include "deviceinfo.h"
 
-class Config;
-class Platform;
-class Device {
+class Platform {
 public:
-    Device();
-    Device(std::shared_ptr<Platform> platform, std::shared_ptr<Config> config);
+    Platform() = default;
 
-    virtual std::string name();
-    virtual std::string prettyName();
-    virtual DeviceInfo::DeviceType deviceType();
-    virtual DeviceInfo::DriverType driverType();
-    virtual int gridUnit();
+    virtual std::string name() = 0;
+    virtual std::string prettyName() = 0;
+    virtual DeviceInfo::DeviceType deviceType() = 0;
+    virtual DeviceInfo::DriverType driverType() = 0;
 
-    // get props that does not have auto detection
-    virtual std::string get(std::string prop, std::string defaultValue);
-    virtual bool contains(std::string prop);
-private:
-    std::shared_ptr<Platform> m_platform;
-    std::shared_ptr<Config> m_config;
+    // Checks if the value returned is valid or default value
+    virtual bool hasValidName() { return false; };
+    virtual bool hasValidPrettyName() { return false; };
+    virtual bool hasValidDeviceType() { return false; };
+
+    static std::shared_ptr<Platform> create();
 };

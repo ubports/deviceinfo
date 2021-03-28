@@ -11,7 +11,11 @@ include(GNUInstallDirs)
 
 option(DISABLE_TESTS "Disable tests" off)
 
+pkg_search_module(YAMLCPP yaml-cpp REQUIRED)
 pkg_search_module(ANDROIDPROPS libandroid-properties)
+if(NOT ANDROIDPROPS_FOUND)
+    message(WARNING "Did not find android properties, bulding without!")
+endif()
 
 set(TARGET deviceinfo)
 
@@ -31,3 +35,14 @@ else()
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# Coverage
+#####################################################################
+# Enable code coverage calculation with gcov/gcovr/lcov
+# Usage:
+#  * Switch build type to coverage (use ccmake or cmake-gui)
+#  * Invoke make, make test, make coverage (or ninja if you use that backend)
+#  * Find html report in subdir coveragereport
+#  * Find xml report feasible for jenkins in coverage.xml
+#####################################################################
+find_package(CoverageReport)

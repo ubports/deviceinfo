@@ -34,6 +34,14 @@ DeviceInfo::DeviceInfo(PrintMode printMode)
     m_device = std::make_shared<Device>();
 }
 
+DeviceInfo::DeviceInfo(Device *device)
+{
+    setPrintMode(PrintMode::Info);
+
+    // Needs to happen after we set print mode
+    m_device = std::shared_ptr<Device>(device, [](auto){});
+}
+
 void DeviceInfo::setPrintMode(PrintMode printMode)
 {
     Logger::setMode(printMode);
